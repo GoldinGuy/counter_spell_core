@@ -93,10 +93,11 @@ class CSScroller {
     this.value = 0.0;
     this.intValue.set(0);
     
-    this.forceComplete();
     //this will trigger confirm() but the action will be null, so it will
     //not affect the gamestate's history
+    if(!this.forceComplete())
+      parent.game.gameAction.clearSelection();
   }
-  void forceComplete() => isScrolling.setDistinct(false);
+  bool forceComplete() => isScrolling.setDistinct(false);
 
 }
