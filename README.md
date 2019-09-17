@@ -1,6 +1,6 @@
 # CounterSpell Core
 
-CounterSpell is a life tracker app I've made using Flutter. I've been rewriting and document it from the ground app lately to (hopefully soon) opensource it as a whole. This is the very core of its logic and UI, with a lot of improvements code, UI, and performance-wise.
+CounterSpell is a life tracker app I've made using Flutter. I've been rewriting and documenting it from the ground up lately to (hopefully soon) opensource it as a whole. This is the very core of its logic and UI, with a lot of improvements code, UI, and performance-wise.
 
 
 ## Built With
