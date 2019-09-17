@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:counter_spell_new/blocs/sub_blocs/game/sub_game_blocs.dart/game_group.dart';
 import 'package:sidereus/bloc/bloc_var.dart';
+import 'package:counter_spell_new/blocs/sub_blocs/game/sub_game_blocs.dart/game_action.dart';
 
 import 'player_tile.dart';
 
@@ -29,6 +30,7 @@ class BodyGroup extends StatelessWidget {
 
     final bloc = group.parent.parent;
     final actionBloc = bloc.game.gameAction;
+    final settings = bloc.settings;
 
     return BlocVar.build9(
       bloc.scaffold.mainIndex,
@@ -54,6 +56,19 @@ class BodyGroup extends StatelessWidget {
       ) {
 
         final page = bloc.scaffold.currentPage;
+        final normalizedPlayerActions = CSGameAction.normalizedAction(
+          pageValue: page,
+          selectedValue: selected,
+          gameState: gameState,
+          scrollerValue: increment,
+
+          //these two values are so rarely updated that all the actual
+          //reactive variables make this rebuild so often that min and max
+          //will basically always be correct. no need to add 2 streambuilders
+          minValue: settings.minValue.value,
+          maxValue: settings.maxValue.value,
+
+        ).actions(gameState.names);
 
         return Material(
           elevation: 8,
@@ -74,6 +89,7 @@ class BodyGroup extends StatelessWidget {
                 counter: counter,
                 casting: isCasting,
                 gameState: gameState,
+                normalizedPlayerActions: normalizedPlayerActions,
               ),
           ]),
         );

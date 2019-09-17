@@ -2,7 +2,7 @@ import 'package:counter_spell_new/models/game/history_model.dart';
 import 'package:counter_spell_new/models/game/types/counters.dart';
 import 'package:counter_spell_new/themes/cs_theme.dart';
 import 'package:counter_spell_new/widgets/constants.dart';
-import 'package:counter_spell_new/widgets/scaffold/components/body/components/history/current_state.dart';
+import 'package:counter_spell_new/widgets/scaffold/components/body/components/history/current_state_tile.dart';
 import 'package:counter_spell_new/widgets/scaffold/components/body/components/history/history_player_tile.dart';
 import 'package:flutter/material.dart';
 
@@ -46,7 +46,7 @@ class HistoryTile extends StatelessWidget {
   Widget buildKnowingSize(double knownTileSize){
 
     if(data is GameHistoryNull){
-      return CurrentState(
+      return CurrentStateTile(
         (data as GameHistoryNull).gameState,
         (data as GameHistoryNull).index,
         names: names,

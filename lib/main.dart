@@ -4,15 +4,15 @@ import 'package:counter_spell_new/widgets/scaffold/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:sidereus/bloc/bloc_provider.dart';
 
-void main() => runApp(CounterSpell());
+void main() => runApp(ScryWalker());
 
-class CounterSpell extends StatefulWidget {
+class ScryWalker extends StatefulWidget {
   // This widget is the root of your application.
   @override
-  _CounterSpellState createState() => _CounterSpellState();
+  _ScryWalkerState createState() => _ScryWalkerState();
 }
 
-class _CounterSpellState extends State<CounterSpell> {
+class _ScryWalkerState extends State<ScryWalker> {
   CSBloc bloc;
 
   @override

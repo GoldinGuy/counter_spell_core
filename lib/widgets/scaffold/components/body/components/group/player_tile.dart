@@ -25,6 +25,7 @@ class PlayerTile extends StatelessWidget {
   final GameState gameState;
   final CSTheme theme;
   final int increment;
+  final Map<String,PlayerAction> normalizedPlayerActions;
 
   const PlayerTile(this.name, {
     @required this.group,
@@ -40,6 +41,7 @@ class PlayerTile extends StatelessWidget {
     @required this.gameState,
     @required this.theme,
     @required this.increment,
+    @required this.normalizedPlayerActions,
   }): 
     assert(!(
       page == CSPage.commander
@@ -53,13 +55,14 @@ class PlayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = group.parent.parent;
-    final scroller = bloc.scroller;
+    final scrollerBloc = bloc.scroller;
     final actionBloc = bloc.game.gameAction;
 
     final bool attacking = whoIsAttacking == name;
     final bool defending = whoIsDefending == name;
     final bool rawSelected = selectedNames[name];
     final bool highlighted = selectedNames[name] != false;
+
     bool scrolling;
     switch (page) {
       case CSPage.history:
@@ -79,13 +82,7 @@ class PlayerTile extends StatelessWidget {
     assert(scrolling != null);
 
     final playerState = gameState.players[name].states.last;
-
-    //these two values are so rarely updated that all the actual
-    //reactive variables make this rebuild so often that min and max
-    //will basically always be correct. no need to add 2 streambuilders
-    // final minValue = bloc.settings.minValue.value;
-    // final maxValue = bloc.settings.maxValue.value;
-
+ 
     //from now on we will act like the page will always be life,
     //we will abstract the player tile later to manage other pages
     //like commander damage / casts / counters
@@ -96,7 +93,7 @@ class PlayerTile extends StatelessWidget {
       if(bloc.scaffold.currentPage == CSPage.life)
         return;
       bloc.scaffold.goToPage(CSPage.life);
-      scroller.ignoringThisPan = true;
+      scrollerBloc.ignoringThisPan = true;
     }
 
     switch (page) {
@@ -109,15 +106,19 @@ class PlayerTile extends StatelessWidget {
         tapCallback = (){
           actionBloc.selected.value[name] = rawSelected == false;
           actionBloc.selected.refresh();
+          if(scrolling){
+            scrollerBloc.delayerController.scrolling();
+            scrollerBloc.delayerController.leaving();
+          }
         };
         panCallback = (details){
 
-          if(scroller.ignoringThisPan) 
+          if(scrollerBloc.ignoringThisPan) 
             return;
 
           actionBloc.selected.value[name] = true;
           actionBloc.selected.refresh();
-          scroller.onDragUpdate(details);
+          scrollerBloc.onDragUpdate(details);
         };
         break;
       case CSPage.commander:
@@ -134,7 +135,7 @@ class PlayerTile extends StatelessWidget {
           if(actionBloc.isSomeoneAttacking){
             actionBloc.defendingPlayer.set(name);
           }
-          scroller.onDragUpdate(details);
+          scrollerBloc.onDragUpdate(details);
         };
         break;
       default:
@@ -146,9 +147,9 @@ class PlayerTile extends StatelessWidget {
       child: InkWell(
         onTap: tapCallback,
         child: VelocityPanDetector(
-          onPanEnd: (_details) => scroller.onDragEnd(),
+          onPanEnd: (_details) => scrollerBloc.onDragEnd(),
           onPanUpdate: panCallback,
-          onPanCancel: scroller.onDragEnd,
+          onPanCancel: scrollerBloc.onDragEnd,
           child: Container(
             //to make the pan callback working, the color cannot be just null
             color: Colors.transparent,
@@ -161,7 +162,7 @@ class PlayerTile extends StatelessWidget {
                   rawSelected: rawSelected,
                   scrolling: scrolling,
                   attacking: attacking,
-                  state: playerState,
+                  playerState: playerState,
                   page: page,
                   defending: defending,
                 ),
@@ -177,7 +178,7 @@ class PlayerTile extends StatelessWidget {
 
   static const _circleFrac = 0.7;
   Widget buildLeading({
-    @required PlayerState state,
+    @required PlayerState playerState,
     @required CSPage page,
     @required bool rawSelected,
     @required bool scrolling,
@@ -224,16 +225,19 @@ class PlayerTile extends StatelessWidget {
       }
       assert(color != null);
 
-      int _increment = increment;
-      if(page == CSPage.life || page == CSPage.counters){
-        if(rawSelected == null)
-          _increment = -increment;
+      final normalizedPlayerAction = normalizedPlayerActions[name];
+      int _increment;
+      if(normalizedPlayerAction is PALife){
+        _increment = normalizedPlayerAction.increment;         
+      } else if(normalizedPlayerAction is PANull){
+        _increment = 0;
       }
+      assert(_increment != null);
 
       child = CircleNumber(
         key: ValueKey("circle number"),
         size: coreTileSize * _circleFrac,
-        value: state.life,
+        value: playerState.life,
         numberOpacity: 1.0, //LOW PRIORITY: PLAYERSTATE -> ISDED
         open: scrolling,
         style: textStyle,

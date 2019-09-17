@@ -46,7 +46,8 @@ class CSGameState {
 
   //====================================
   // Actions
-  void applyAction(GameAction action){
+  void applyAction(GameAction action, {bool clearFutures = true}){
+    //the action should be provided as already normalized by the action bloc!
     if(action is GANull) return;
 
     this.gameState.value.applyAction(action);
@@ -57,10 +58,7 @@ class CSGameState {
     //(the current state without changes), we start at 1 instead of 0
     this.parent.gameHistory.forward(1);
 
-    // TODO: cerca tutti i LOW PRIORITY
-    // LOW PRIORITY implementa controllo del player sulla azione, così il game chiede a tutti i player
-    // se l'azione avrebbe any fottuto effetto, e in caso contrario proprio non la applica a nessuno
-    // ANZI, pre-check a livello di game magari
+    if(clearFutures) this.futureActions.set(<GameAction>[]);
   }
 
   void back(){
@@ -89,7 +87,14 @@ class CSGameState {
   }
   void _forward(){
     assert(forwardable);
-    this.applyAction(this.futureActions.value.removeLast());
+    this.applyAction(
+      futureActions.value
+        .removeLast(),
+        // .normalizeOnLast(gameState.value),
+        //normalizing the future action should be a good practice
+        //but we are fairly sure that it wont cause any trouble
+      clearFutures: false,
+    );
     this.futureActions.refresh();
   }
 

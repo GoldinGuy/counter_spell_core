@@ -1,4 +1,3 @@
-import 'package:counter_spell_new/models/game/player_actions/pa_life%20copy.dart';
 import 'package:flutter/widgets.dart';
 
 import 'model.dart';
@@ -13,7 +12,7 @@ abstract class PlayerAction{
 
   const PlayerAction();
   PlayerState apply(PlayerState state);
-
+  PlayerAction normalizeOn(PlayerState state);
 
 
   //=====================================
