@@ -93,22 +93,19 @@ class CSGameState {
     this.futureActions.refresh();
   }
 
-  void restart(){
-    this.gameState.set(
-      this.gameState.value.newGame(
-        startingLife: this.parent.startingLife,
-      )
-    );
+  void restart()
+    => _resetGame(this.gameState.value.newGame(
+      startingLife: this.parent.currentStartingLife,
+    ));
+  void startNew(Set<String> names)
+    => _resetGame(GameState.start(
+      names, 
+      startingLife: this.parent.currentStartingLife,
+    ));
+  void _resetGame(GameState newGameState){
+    this.gameState.set(newGameState);
     this.parent.gameHistory.listController.refresh(1);
-  }
-  void startNew(Set<String> names){
-    this.gameState.set(
-      GameState.start(
-        names, 
-        startingLife: this.parent.startingLife,
-      )
-    );
-    this.parent.gameHistory.listController.refresh(1);
+    this.futureActions.set(<GameAction>[]);
   }
 
 
@@ -125,7 +122,7 @@ class CSGameState {
   void addNewPlayer(String name){
     this.gameState.value.addNewPlayer(
       name, 
-      startingLife: this.parent.startingLife,
+      startingLife: this.parent.currentStartingLife,
     );
     this.parent.gameHistory.listController.rebuild();
   }

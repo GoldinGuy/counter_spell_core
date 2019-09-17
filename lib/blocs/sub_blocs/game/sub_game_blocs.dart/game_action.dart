@@ -89,11 +89,21 @@ class CSGameAction {
     if(scrollerValue == 0)
       return GANull.instance;
 
-    if(pageValue == CSPage.life)
+    if(pageValue == CSPage.life){
+      //if they are all deselected this is a null action!
+      if(selectedValue.values.every((b) => !b))
+        return GANull.instance;
+
       return GALife(
         scrollerValue,
         selected: selectedValue,
       );
+    }
+
+    //if(pageValue  == CSPage.commander) bla bla bla
+      //if(isCasting) bla bla bla
+      //else bla bla bla
+    //if(pageValue  == CSPage.counters) bla bla bla
 
     return GANull.instance;
   }
