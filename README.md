@@ -2,6 +2,11 @@
 
 CounterSpell is a life tracker app I've made using Flutter. I've been rewriting and documenting it from the ground up lately to (hopefully soon) opensource it as a whole. This is the very core of its logic and UI, with a lot of improvements code, UI, and performance-wise.
 
+## Try it out
+You can find the app on:
+
+* [Play Store](https://play.google.com/store/apps/details?id=com.mvsidereusart.counterspell)
+* [App Store](https://itunes.apple.com/us/app/counterspell/id1459235508?l=it&ls=1&mt=8)
 
 ## Built With
 
