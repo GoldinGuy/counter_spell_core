@@ -79,8 +79,6 @@ class _Change extends StatelessWidget {
     @required this.theme,
     @required this.counters,
   });
-
-  static const double _height = 35;
   
   @override
   Widget build(BuildContext context) {
@@ -106,6 +104,7 @@ class _Change extends StatelessWidget {
       icon: icon,
       subText: subText,
       text: text,
+      color: color,
     );
   }
 
