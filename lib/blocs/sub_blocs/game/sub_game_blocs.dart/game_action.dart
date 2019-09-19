@@ -93,7 +93,7 @@ class CSGameAction {
 
     if(pageValue == CSPage.life){
       //if they are all deselected this is a null action!
-      if(selectedValue.values.every((b) => !b))
+      if(selectedValue.values.every((b) => b == false))
         return GANull.instance;
 
       return GALife(
@@ -128,7 +128,7 @@ class CSGameAction {
 
   GameAction get currentNormalizedAction => normalizedAction(
     scrollerValue: parent.parent.scroller.intValue.value,
-    pageValue: parent.parent.scaffold.currentPage,
+    pageValue: parent.parent.scaffold.page.value,
     selectedValue: selected.value,
     gameState: parent.gameState.gameState.value,
     minValue: parent.parent.settings.minValue.value,

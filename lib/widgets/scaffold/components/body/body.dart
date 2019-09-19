@@ -26,15 +26,36 @@ class CSBody extends StatelessWidget {
     return LayoutBuilder(builder: (context, constraints)
       => group.names.build((context, names){
 
+        final bool landScape = constraints.maxWidth >= constraints.maxHeight;
+        final historyEnabled = bloc.settings.enabledPages.value[CSPage.history];
+        if(landScape){
+          if(historyEnabled){
+            bloc.settings.disablePage(CSPage.history);
+          }
+        } else {
+          if(!historyEnabled){
+            bloc.settings.enablePage(CSPage.history);
+            () async {
+              await Future.delayed(const Duration(milliseconds: 50));
+              bloc.game.gameHistory.listController.refresh(
+                bloc.game.gameState.gameState.value.historyLenght,
+              );
+            } ();
+          }
+        }
+
         final int count = names.length;
+        final int rowCount = landScape 
+          ? (count / 2).ceil()
+          : count;
 
         final double tileSize = CSConstants.computeTileSize(
           constraints, 
           _coreTileSize, 
-          count,
+          rowCount,
         );
 
-        final double totalSize = tileSize * count;
+        final double totalSize = tileSize * rowCount;
 
         return ConstrainedBox(
           constraints: constraints,
@@ -46,27 +67,25 @@ class CSBody extends StatelessWidget {
                 => Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
-
-                    Positioned.fill(
-                      right: CSConstants.minTileSize,
-                      child: BodyHistory(
-                        theme: theme,
-                        count: count,
-                        tileSize: tileSize,
-                        group: group,
-                        names: names,
-                        coreTileSize: _coreTileSize,
+                    if(!landScape)
+                      Positioned.fill(
+                        right: CSConstants.minTileSize,
+                        child: BodyHistory(
+                          theme: theme,
+                          count: count,
+                          tileSize: tileSize,
+                          group: group,
+                          names: names,
+                          coreTileSize: _coreTileSize,
+                        ),
                       ),
-                    ),
 
-                    scaffold.mainIndex.build((_, i) => AnimatedPositioned(
+                    scaffold.page.build((_, currentPage) => AnimatedPositioned(
                       duration: MyDurations.fast,
                       top: 0.0,
                       bottom: 0.0,
                       width: constraints.maxWidth,
-
-                      //scaffold.currentPage is updated when mainIndex changes
-                      left: scaffold.currentPage == CSPage.history 
+                      left: currentPage == CSPage.history 
                         ? constraints.maxWidth - CSConstants.minTileSize
                         : 0.0,
 
@@ -77,6 +96,7 @@ class CSBody extends StatelessWidget {
                         coreTileSize: _coreTileSize,
                         theme: theme,
                         group: group,
+                        landScape: landScape,
                       ),
                     )),
 
