@@ -1,12 +1,12 @@
 import 'package:counter_spell_new/blocs/sub_blocs/game/sub_game_blocs.dart/game_action.dart';
 import 'package:counter_spell_new/blocs/sub_blocs/game/sub_game_blocs.dart/game_group.dart';
 import 'package:counter_spell_new/blocs/sub_blocs/scroller/scroller_detector.dart';
-import 'package:counter_spell_new/blocs/sub_blocs/scroller/scroller_recognizer.dart';
 import 'package:counter_spell_new/models/game/model.dart';
 import 'package:counter_spell_new/models/game/types/counters.dart';
 import 'package:counter_spell_new/structure/pages.dart';
 import 'package:counter_spell_new/themes/cs_theme.dart';
 import 'package:counter_spell_new/themes/my_durations.dart';
+import 'package:counter_spell_new/widgets/scaffold/components/body/components/group/player_tile_gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:sidereus/reusable_widgets/reusable_widgets.dart';
 
@@ -25,6 +25,7 @@ class PlayerTile extends StatelessWidget {
   final GameState gameState;
   final CSTheme theme;
   final int increment;
+  final Map<String,PlayerAction> normalizedPlayerActions;
 
   const PlayerTile(this.name, {
     @required this.group,
@@ -40,6 +41,7 @@ class PlayerTile extends StatelessWidget {
     @required this.gameState,
     @required this.theme,
     @required this.increment,
+    @required this.normalizedPlayerActions,
   }): 
     assert(!(
       page == CSPage.commander
@@ -53,13 +55,14 @@ class PlayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = group.parent.parent;
-    final scroller = bloc.scroller;
+    final scrollerBloc = bloc.scroller;
     final actionBloc = bloc.game.gameAction;
 
     final bool attacking = whoIsAttacking == name;
     final bool defending = whoIsDefending == name;
     final bool rawSelected = selectedNames[name];
     final bool highlighted = selectedNames[name] != false;
+
     bool scrolling;
     switch (page) {
       case CSPage.history:
@@ -79,76 +82,30 @@ class PlayerTile extends StatelessWidget {
     assert(scrolling != null);
 
     final playerState = gameState.players[name].states.last;
-
-    //these two values are so rarely updated that all the actual
-    //reactive variables make this rebuild so often that min and max
-    //will basically always be correct. no need to add 2 streambuilders
-    // final minValue = bloc.settings.minValue.value;
-    // final maxValue = bloc.settings.maxValue.value;
-
+ 
     //from now on we will act like the page will always be life,
     //we will abstract the player tile later to manage other pages
     //like commander damage / casts / counters
 
-    VoidCallback tapCallback;
-    void Function(CSDragUpdateDetails) panCallback;
-    void returnToLife(){
-      if(bloc.scaffold.currentPage == CSPage.life)
-        return;
-      bloc.scaffold.goToPage(CSPage.life);
-      scroller.ignoringThisPan = true;
-    }
-
-    switch (page) {
-      case CSPage.history:
-        tapCallback = returnToLife;
-        panCallback = (details) => returnToLife();
-        break;
-      case CSPage.counters:
-      case CSPage.life:
-        tapCallback = (){
-          actionBloc.selected.value[name] = rawSelected == false;
-          actionBloc.selected.refresh();
-        };
-        panCallback = (details){
-
-          if(scroller.ignoringThisPan) 
-            return;
-
-          actionBloc.selected.value[name] = true;
-          actionBloc.selected.refresh();
-          scroller.onDragUpdate(details);
-        };
-        break;
-      case CSPage.commander:
-        tapCallback = (){
-          if(attacking){
-            actionBloc.attackingPlayer.set("");
-            actionBloc.defendingPlayer.set("");
-          } else {
-            actionBloc.attackingPlayer.set(name);
-            actionBloc.defendingPlayer.set("");
-          }
-        };
-        panCallback = (details){
-          if(actionBloc.isSomeoneAttacking){
-            actionBloc.defendingPlayer.set(name);
-          }
-          scroller.onDragUpdate(details);
-        };
-        break;
-      default:
-    }
-    assert(tapCallback != null);
-    assert(panCallback != null);
-
     return Material(
       child: InkWell(
-        onTap: tapCallback,
+        onTap: () => PlayerGestures.tap(
+          name,
+          page: page,
+          attacking: attacking,
+          rawSelected: rawSelected,
+          bloc: bloc,
+          isScrollingSomewhere: isScrollingSomewhere,
+        ),
         child: VelocityPanDetector(
-          onPanEnd: (_details) => scroller.onDragEnd(),
-          onPanUpdate: panCallback,
-          onPanCancel: scroller.onDragEnd,
+          onPanEnd: (_details) => scrollerBloc.onDragEnd(),
+          onPanUpdate: (details) => PlayerGestures.pan(
+            details,
+            name,
+            bloc: bloc,
+            page: page,
+          ),
+          onPanCancel: scrollerBloc.onDragEnd,
           child: Container(
             //to make the pan callback working, the color cannot be just null
             color: Colors.transparent,
@@ -161,7 +118,7 @@ class PlayerTile extends StatelessWidget {
                   rawSelected: rawSelected,
                   scrolling: scrolling,
                   attacking: attacking,
-                  state: playerState,
+                  playerState: playerState,
                   page: page,
                   defending: defending,
                 ),
@@ -177,7 +134,7 @@ class PlayerTile extends StatelessWidget {
 
   static const _circleFrac = 0.7;
   Widget buildLeading({
-    @required PlayerState state,
+    @required PlayerState playerState,
     @required CSPage page,
     @required bool rawSelected,
     @required bool scrolling,
@@ -224,16 +181,19 @@ class PlayerTile extends StatelessWidget {
       }
       assert(color != null);
 
-      int _increment = increment;
-      if(page == CSPage.life || page == CSPage.counters){
-        if(rawSelected == null)
-          _increment = -increment;
+      final normalizedPlayerAction = normalizedPlayerActions[name];
+      int _increment;
+      if(normalizedPlayerAction is PALife){
+        _increment = normalizedPlayerAction.increment;         
+      } else if(normalizedPlayerAction is PANull){
+        _increment = 0;
       }
+      assert(_increment != null);
 
       child = CircleNumber(
         key: ValueKey("circle number"),
         size: coreTileSize * _circleFrac,
-        value: state.life,
+        value: playerState.life,
         numberOpacity: 1.0, //LOW PRIORITY: PLAYERSTATE -> ISDED
         open: scrolling,
         style: textStyle,
@@ -274,9 +234,10 @@ class PlayerTile extends StatelessWidget {
                 height: coreTileSize,
                 child: Checkbox(
                   value: rawSelected,
+                  activeColor: theme.pageColors[page],
                   tristate: true,
                   onChanged: (b) {
-                    actionBloc.selected.value[name] = b;
+                    actionBloc.selected.value[name] = rawSelected == false ? true : false;
                     actionBloc.selected.refresh();
                   },
                 ),
@@ -320,8 +281,3 @@ class PlayerTile extends StatelessWidget {
   }
 
 }
-
-
-
-
-

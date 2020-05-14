@@ -16,20 +16,20 @@ class PlayerState {
 
   //===================================
   // Modifiers
-  static const _kMin = -99999999999999;
-  static const _kMax = 999999999999999;
+  static const kMinValue = -99999999999999;
+  static const kMaxValue = 999999999999999;
   PlayerState withLife(
     int life, {
-      int minVal = _kMin, 
-      int maxVal = _kMax,
+      int minVal = kMinValue, 
+      int maxVal = kMaxValue,
     }
   ) => PlayerState.now(
-    life: life.clamp(minVal ?? _kMin, maxVal ?? _kMax),
+    life: life.clamp(minVal ?? kMinValue, maxVal ?? kMaxValue),
   );
   PlayerState incrementLife(
     int increment, {
-      int minVal = _kMin, 
-      int maxVal = _kMax,
+      int minVal = kMinValue, 
+      int maxVal = kMaxValue,
     }
   ) => this.withLife(this.life + increment, minVal: minVal, maxVal: maxVal);
 

@@ -84,19 +84,23 @@ class CSGameAction {
   static GameAction action({
     @required int scrollerValue, 
     @required CSPage pageValue, 
-    @required Map<String,bool> selectedValue
+    @required Map<String,bool> selectedValue,
+    @required int minValue,
+    @required int maxValue,
   }) {
     if(scrollerValue == 0)
       return GANull.instance;
 
     if(pageValue == CSPage.life){
       //if they are all deselected this is a null action!
-      if(selectedValue.values.every((b) => !b))
+      if(selectedValue.values.every((b) => b == false))
         return GANull.instance;
 
       return GALife(
         scrollerValue,
         selected: selectedValue,
+        minVal: minValue,
+        maxVal: maxValue,
       );
     }
 
@@ -107,12 +111,29 @@ class CSGameAction {
 
     return GANull.instance;
   }
+  static GameAction normalizedAction({
+    @required int scrollerValue, 
+    @required CSPage pageValue, 
+    @required Map<String,bool> selectedValue,
+    @required GameState gameState,
+    @required int minValue,
+    @required int maxValue,
+  }) => action(
+    pageValue: pageValue,
+    scrollerValue: scrollerValue,
+    selectedValue: selectedValue,
+    minValue: minValue,
+    maxValue: maxValue,
+  ).normalizeOnLast(gameState);
 
-  GameAction get currentAction => action(
+  GameAction get currentNormalizedAction => normalizedAction(
     scrollerValue: parent.parent.scroller.intValue.value,
-    pageValue: parent.parent.scaffold.currentPage,
+    pageValue: parent.parent.scaffold.page.value,
     selectedValue: selected.value,
-  ); 
+    gameState: parent.gameState.gameState.value,
+    minValue: parent.parent.settings.minValue.value,
+    maxValue: parent.parent.settings.maxValue.value,
+  );
 
   bool get isSomeoneAttacking => selected.value.keys.contains(attackingPlayer.value);
   bool get isSomeoneDefending => selected.value.keys.contains(defendingPlayer.value);
@@ -152,7 +173,7 @@ class CSGameAction {
   //Do not call this manually, let it be called by the isScrolling's "onChanged" method
   // -> if you want to trigger this, just call scroller.forceComplete()
   void privateConfirm(){
-    this.parent.gameState.applyAction(this.currentAction);
+    this.parent.gameState.applyAction(this.currentNormalizedAction);
     this.clearSelection();
     this.parent.parent.scroller.value = 0.0;
     this.parent.parent.scroller.intValue.set(0);

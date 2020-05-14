@@ -11,5 +11,9 @@ class GANull extends GameAction{
       n: PANull.instance,
   };
 
+  @override
+  GameAction normalizeOnLast(GameState state)
+    => GANull.instance;
+
   static const GANull instance = const GANull();
 }

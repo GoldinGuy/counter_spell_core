@@ -8,6 +8,10 @@ class PANull extends PlayerAction {
     return state;
   }
 
+  @override
+  PlayerAction normalizeOn(PlayerState state)
+    => PANull.instance;
+
   static const PANull instance = const PANull();
 }
 

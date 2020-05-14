@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:counter_spell_new/models/game/game_state.dart';
 
 
-class CurrentState extends StatelessWidget {
+class CurrentStateTile extends StatelessWidget {
   final List<String> names;
   final double tileSize;
   final double coreTileSize;
@@ -18,7 +18,7 @@ class CurrentState extends StatelessWidget {
   final int stateIndex;
   final GameState gameState;
 
-  const CurrentState(this.gameState, this.stateIndex,{
+  const CurrentStateTile(this.gameState, this.stateIndex,{
     @required this.names,
     @required this.tileSize,
     @required this.coreTileSize,

@@ -14,7 +14,16 @@ abstract class GameAction{
   const GameAction();
   Map<String,PlayerAction> actions(Set<String> names);
 
-
+  GameAction normalizeOnLast(GameState state) {
+    final map = this.actions(state.names);
+    final normalizedMap = {
+      for(final entry in map.entries)
+        entry.key : entry.value.normalizeOn(
+          state.players[entry.key].states.last,
+        )
+    };
+    return GameAction.fromPlayerActions(normalizedMap);
+  }
 
 
   //=============================
@@ -23,6 +32,9 @@ abstract class GameAction{
   factory GameAction.fromPlayerActions(
     Map<String,PlayerAction> actions
   ){
+    if(actions.values.every((action) => action is PANull))
+      return GANull.instance;
+
     return GAComposite(actions);
   }
 

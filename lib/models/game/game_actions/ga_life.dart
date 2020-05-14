@@ -31,4 +31,6 @@ class GALife extends GameAction{
         maxVal: maxVal,
       )
   };
+
+
 }

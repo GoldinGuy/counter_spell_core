@@ -7,4 +7,5 @@ class GAComposite extends GameAction{
 
   @override
   Map<String, PlayerAction> actions(names) => actionList;
+
 }
